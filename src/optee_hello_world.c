@@ -66,6 +66,56 @@ static void OPTEE_INC(afb_req_t req){
 }
 
 static void OPTEE_DEC(afb_req_t req){
+    TEEC_Result res;
+	TEEC_Context ctx;
+	TEEC_Session sess;
+	TEEC_Operation op;
+	TEEC_UUID uuid = TA_HELLO_WORLD_UUID;
+	uint32_t err_origin;
+
+    json_object *tmpJ;
+    json_object *queryJ = afb_req_json(req);
+
+    json_bool success = json_object_object_get_ex(queryJ, "value", &tmpJ);
+	if (!success) {
+		afb_req_fail_f(req, "ERROR", "key value not found in '%s'", json_object_get_string(queryJ));
+		return;
+	}
+	if (json_object_get_type(tmpJ) != json_type_int) {
+		afb_req_fail(req, "ERROR", "key value not an int");
+		return;
+	}
+
+	res = TEEC_InitializeContext(NULL, &ctx);
+	if (res != TEEC_SUCCESS)
+		errx(1, "TEEC_InitializeContext failed with code 0x%x", res);
+
+	res = TEEC_OpenSession(&ctx, &sess, &uuid,
+			       TEEC_LOGIN_PUBLIC, NULL, NULL, &err_origin);
+	if (res != TEEC_SUCCESS)
+		errx(1, "TEEC_Opensession failed with code 0x%x origin 0x%x",
+			res, err_origin);
+
+	memset(&op, 0, sizeof(op));
+
+	op.paramTypes = TEEC_PARAM_TYPES(TEEC_VALUE_INOUT, TEEC_NONE,
+					 TEEC_NONE, TEEC_NONE);
+	op.params[0].value.a = json_object_get_int(tmpJ);
+
+	printf("Invoking TA to increment %d\n", op.params[0].value.a);
+	res = TEEC_InvokeCommand(&sess, TA_HELLO_WORLD_CMD_DEC_VALUE, &op,
+				 &err_origin);
+	if (res != TEEC_SUCCESS)
+		errx(1, "TEEC_InvokeCommand failed with code 0x%x origin 0x%x",
+			res, err_origin);
+
+    afb_req_success(req, json_object_new_int(op.params[0].value.a), NULL);
+	printf("TA decremented value to %d\n", op.params[0].value.a);
+
+	TEEC_CloseSession(&sess);
+
+	TEEC_FinalizeContext(&ctx);
+
     return;
 }
 
