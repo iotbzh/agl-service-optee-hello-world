@@ -9,4 +9,8 @@
   <feature name="urn:AGL:widget:required-binding">
      <param name="lib/afb-optee-hello-world.so" value="local" />
   </feature>
+  <feature name="urn:AGL:widget:required-permission">
+    <param name="urn:AGL:permission::partner:scope-platform" value="required" />
+    <param name="urn:AGL:permission::system:capability:keep-all" value="required" />
+  </feature>
 </widget>
