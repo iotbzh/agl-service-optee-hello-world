@@ -7,7 +7,6 @@
   <author>@PROJECT_AUTHOR@ &lt;@PROJECT_AUTHOR_MAIL@&gt;</author>
   <license>@PROJECT_LICENSE@</license>
   <feature name="urn:AGL:widget:required-api">
-     <param name="harvester" value="ws" />
-     <param name="lib/afb-low-collector.so" value="local" />
+     <param name="lib/afb-optee-hello-world.so" value="local" />
   </feature>
 </widget>
